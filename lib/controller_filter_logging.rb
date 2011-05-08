@@ -20,7 +20,11 @@ module AbstractController::Callbacks::ClassMethods
     define_method("#{filter_name}_with_logging") do
       Rails.logger.debug("Entering before_filter: #{filter_name}")
       send(filter_name).tap do |result|
-        Rails.logger.debug(" result: #{result.inspect}")
+        begin
+          Rails.logger.debug(" result: #{result.inspect}")
+        rescue
+          Rails.logger.debug(" error outputting result: #{$!.class.name}/#{$!.message}")
+        end
       end
     end
   end
