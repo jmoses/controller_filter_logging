@@ -1,0 +1,14 @@
+= controller_filter_logging
+
+== What is it?
+
+It's a gem to output more logging when you enter and leave before filters in a rails 3 app.
+
+== Why?
+
+Rails 2 had this, and Rails 3 doesn't.  It's super helpful when your app starts doing odd things in before_filter's, and you can't figure out why.
+
+== Credits
+
+MINE ALL MINE
+jon@burningbush.us
