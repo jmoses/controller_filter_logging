@@ -1,7 +1,12 @@
 module AbstractController::Callbacks::ClassMethods
-  def before_filter_with_logging(filter_name, *args)
-    create_logging_filter(filter_name)
-    before_filter_without_logging "#{filter_name}_with_logging".to_sym, *args
+  def before_filter_with_logging(filter_name, *args, &block)
+    if block_given?
+      Rails.logger.debug("Can't log filters with blocks: #{caller[0..3].join("\n")}")
+      before_filter_without_logging filter_name, *args, &block
+    else
+      create_logging_filter(filter_name)
+      before_filter_without_logging "#{filter_name}_with_logging".to_sym, *args
+    end
   end
   alias_method_chain :before_filter, :logging
 
@@ -10,9 +15,14 @@ module AbstractController::Callbacks::ClassMethods
   end
   alias_method_chain :skip_before_filter, :logging
 
-  def prepend_before_filter_with_logging(filter_name, *args)
-    create_logging_filter(filter_name)
-    prepend_before_filter_without_logging("#{filter_name}_with_logging".to_sym, *args)
+  def prepend_before_filter_with_logging(filter_name, *args, &block)
+    if block_given?
+      Rails.logger.debug("Can't log filters with blocks: #{caller[0..3].join("\n")}")
+      prepend_before_filter_without_logging filter_name, *args, &block
+    else
+      create_logging_filter(filter_name)
+      prepend_before_filter_without_logging("#{filter_name}_with_logging".to_sym, *args)
+    end
   end
   alias_method_chain :prepend_before_filter, :logging
 
