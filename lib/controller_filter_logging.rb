@@ -1,11 +1,12 @@
 module AbstractController::Callbacks::ClassMethods
-  def before_filter_with_logging(filter_name, *args, &block)
+  def before_filter_with_logging(*args, &block)
+    filter_name = args.first.kind_of?(::Symbol) ? args.first : '<< anonymous >>'
+
     if block_given?
       Rails.logger.debug("Can't log filters with blocks: #{caller[0..3].join("\n")}")
-      before_filter_without_logging filter_name, *args, &block
+      before_filter_without_logging *args, &block
     else
-      create_logging_filter(filter_name)
-      before_filter_without_logging "#{filter_name}_with_logging".to_sym, *args
+      before_filter_without_logging create_logging_filter(filter_name), *args
     end
   end
   alias_method_chain :before_filter, :logging
@@ -27,7 +28,8 @@ module AbstractController::Callbacks::ClassMethods
   alias_method_chain :prepend_before_filter, :logging
 
   def create_logging_filter(filter_name)
-    define_method("#{filter_name}_with_logging") do
+    name = "#{filter_name.to_s.gsub(%r{[?!]}, '')}_with_logging"
+    define_method(name) do
       Rails.logger.debug("Entering before_filter: #{filter_name}")
       send(filter_name).tap do |result|
         begin
@@ -37,5 +39,6 @@ module AbstractController::Callbacks::ClassMethods
         end
       end
     end
+    name.to_sym
   end
 end
