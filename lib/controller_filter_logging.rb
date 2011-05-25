@@ -1,11 +1,10 @@
 module AbstractController::Callbacks::ClassMethods
   def before_filter_with_logging(*args, &block)
-    filter_name = args.first.kind_of?(::Symbol) ? args.first : '<< anonymous >>'
-
     if block_given?
       Rails.logger.debug("Can't log filters with blocks: #{caller[0..3].join("\n")}")
       before_filter_without_logging *args, &block
     else
+      filter_name = args.shift
       before_filter_without_logging create_logging_filter(filter_name), *args
     end
   end
