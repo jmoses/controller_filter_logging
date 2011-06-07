@@ -1,12 +1,8 @@
+require 'abstract_controller'
+
 module AbstractController::Callbacks::ClassMethods
   def before_filter_with_logging(*args, &block)
-    if block_given?
-      Rails.logger.debug("Can't log filters with blocks: #{caller[0..3].join("\n")}")
-      before_filter_without_logging *args, &block
-    else
-      filter_name = args.shift
-      before_filter_without_logging create_logging_filter(filter_name), *args
-    end
+    handle_filter(:before_filter, *args, &block)
   end
   alias_method_chain :before_filter, :logging
 
@@ -15,16 +11,22 @@ module AbstractController::Callbacks::ClassMethods
   end
   alias_method_chain :skip_before_filter, :logging
 
-  def prepend_before_filter_with_logging(filter_name, *args, &block)
-    if block_given?
-      Rails.logger.debug("Can't log filters with blocks: #{caller[0..3].join("\n")}")
-      prepend_before_filter_without_logging filter_name, *args, &block
-    else
-      create_logging_filter(filter_name)
-      prepend_before_filter_without_logging("#{filter_name}_with_logging".to_sym, *args)
-    end
+  def prepend_before_filter_with_logging(*args, &block)
+    handle_filter(:prepend_before_filter, *args, &block)
   end
   alias_method_chain :prepend_before_filter, :logging
+
+  private
+  def handle_filter(type, *args, &block)
+    method = "#{type}_without_logging"
+    if block_given?
+      Rails.logger.debug("Can't log filters with blocks: #{caller[0..3].join("\n")}")
+      send(method, *args, &block)
+    else
+      filter_name = args.shift
+      send(method, create_logging_filter(filter_name), *args)
+    end
+  end
 
   def create_logging_filter(filter_name)
     name = "#{filter_name.to_s.gsub(%r{[?!]}, '')}_with_logging"
@@ -40,4 +42,5 @@ module AbstractController::Callbacks::ClassMethods
     end
     name.to_sym
   end
+
 end
