@@ -32,9 +32,11 @@ module AbstractController::Callbacks::ClassMethods
     name = "#{filter_name.to_s.gsub(%r{[?!]}, '')}_with_logging"
     define_method(name) do
       Rails.logger.debug("Entering before_filter: #{filter_name}")
+      start_time = Time.now
       send(filter_name).tap do |result|
+        stop_time = Time.now
         begin
-          Rails.logger.debug(" result: #{result.inspect}")
+          Rails.logger.debug(" result (#{sprintf("%.5f", stop_time - start_time)}): #{result.inspect}")
         rescue
           Rails.logger.debug(" error outputting result: #{$!.class.name}/#{$!.message}")
         end
