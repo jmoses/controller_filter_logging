@@ -7,7 +7,7 @@ module AbstractController::Callbacks::ClassMethods
   alias_method_chain :before_filter, :logging
 
   def skip_before_filter_with_logging(filter_name, *args)
-    skip_before_filter_without_logging("#{filter_name}_with_logging".to_sym, *args)
+    skip_before_filter_without_logging(filter_name_to_logging_filter_name(filter_name).to_sym, *args)
   end
   alias_method_chain :skip_before_filter, :logging
 
@@ -29,7 +29,7 @@ module AbstractController::Callbacks::ClassMethods
   end
 
   def create_logging_filter(filter_name)
-    name = "#{filter_name.to_s.gsub(%r{[?!]}, '')}_with_logging"
+    name = filter_name_to_logging_filter_name(filter_name)
     define_method(name) do
       Rails.logger.debug("Entering before_filter: #{filter_name}")
       start_time = Time.now
@@ -44,5 +44,10 @@ module AbstractController::Callbacks::ClassMethods
     end
     name.to_sym
   end
+
+  protected
+    def filter_name_to_logging_filter_name(filter_name)
+      "#{filter_name.to_s.gsub(%r{[?!]}, '')}_with_logging"
+    end
 
 end

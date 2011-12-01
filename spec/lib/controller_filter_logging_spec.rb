@@ -25,7 +25,7 @@ describe 'controller_filter_logging' do
         result = 12345
 
         Rails.logger.expects(:debug).with("Entering before_filter: test")
-        Rails.logger.expects(:debug).with(" result: #{result}")
+        Rails.logger.expects(:debug).with(" result (0.00001): #{result}")
 
         controller = Class.new(ActionController::Base) do
           attr_reader :called
@@ -42,6 +42,29 @@ describe 'controller_filter_logging' do
         controller.called.should == result
         controller.methods.should include(:test_with_logging)
       end
+    end
+  end
+
+  describe "#skip_before_filter_with_logging" do
+    it "should skip a filter with a ! in it" do
+      controller = Class.new(ActionController::Base) do
+        attr_accessor :called
+        def test_filter!
+          @called = true
+        end
+
+        before_filter :test_filter!
+
+      end.new
+
+      controller.run_callbacks(:process_action)
+      controller.called.should == true
+
+      controller.called = nil
+      controller.class_eval { skip_before_filter :test_filter! }
+
+      controller.run_callbacks(:process_action)
+      controller.called.should == nil
     end
   end
 end
